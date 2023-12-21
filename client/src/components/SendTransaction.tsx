@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -8,8 +8,10 @@ import {
 } from "../store/transaction/actions";
 import {
   getTransactionError,
+  getTransactionHash,
   getTransactionStatus,
 } from "../store/transaction/selectors";
+import { navigate } from "./NaiveRouter";
 
 interface FormValues {
   recipient: string;
@@ -23,6 +25,7 @@ const SendTransaction: React.FC<Props> = ({ fromAddress }) => {
   const dispatch = useDispatch();
 
   const error = useSelector(getTransactionError);
+  const hash = useSelector(getTransactionHash);
   const status = useSelector(getTransactionStatus);
 
   const {
@@ -37,15 +40,25 @@ const SendTransaction: React.FC<Props> = ({ fromAddress }) => {
     },
   });
 
+  useEffect(() => {
+    if (status === "DONE" && !error && !!hash) {
+      dispatch({
+        type: CLEAR_TRANSACTION_REQUEST,
+      });
+
+      (window as any).HSOverlay.close(document.getElementById("hs-basic-modal"))
+      
+      navigate(`/transaction/${hash}`);
+    }
+  }, [dispatch, error, hash, status]);
+
   const onSubmit = useCallback(
     (data: FormValues) => {
-      console.log("Form submitted with:", data);
-      // Dispatch actions here (SEND_TRANSACTION_REQUEST)
       dispatch({
         type: SEND_TRANSACTION_REQUEST,
         payload: { to: data.recipient, amount: data.amount },
       });
-      reset(); // Reset the form after submission
+      reset();
     },
     [dispatch, reset]
   );

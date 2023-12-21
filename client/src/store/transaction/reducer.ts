@@ -1,13 +1,15 @@
 import * as ActionTypes from "./actions";
 
 export interface TransactionState {
-  status: "PENDING" | "DONE" | null;
   error: string | null;
+  hash: string | null;
+  status: "PENDING" | "DONE" | null;
 }
 
 const initialState: TransactionState = {
-  status: null,
   error: null,
+  hash: null,
+  status: null,
 };
 
 const transactionReducer = (
@@ -18,26 +20,30 @@ const transactionReducer = (
     case ActionTypes.SEND_TRANSACTION_REQUEST:
       return {
         ...state,
-        status: "PENDING",
         error: null,
+        hash: null,
+        status: "PENDING",
       };
     case ActionTypes.SEND_TRANSACTION_SUCCESS:
       return {
         ...state,
-        status: "DONE",
         error: null,
+        hash: action.payload.receipt.hash,
+        status: "DONE",
       };
     case ActionTypes.SEND_TRANSACTION_FAILURE:
       return {
         ...state,
-        status: "DONE",
         error: action.payload.error,
+        hash: null,
+        status: "DONE",
       };
     case ActionTypes.CLEAR_TRANSACTION_REQUEST:
       return {
         ...state,
-        status: null,
         error: null,
+        hash: null,
+        status: null,
       };
     default:
       return state;

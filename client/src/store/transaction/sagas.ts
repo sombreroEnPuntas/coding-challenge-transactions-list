@@ -5,7 +5,6 @@ import {
   Transaction,
   TransactionReceipt,
   TransactionResponse,
-  parseEther,
   parseUnits,
 } from "ethers";
 
@@ -27,7 +26,7 @@ export function* sendTransaction(
 
     const transaction = {
       to,
-      value: parseEther(amount),
+      value: parseUnits(amount, "ether"),
     };
 
     const txResponse: TransactionResponse = yield signer.sendTransaction(
@@ -46,8 +45,20 @@ export function* sendTransaction(
       gasPrice: rawReceipt.gasPrice?.toString() || "0",
       hash: rawReceipt.hash?.toString() || "null",
       to: rawReceipt.to?.toString() || "null",
-      value: parseUnits(rawReceipt.value.toString(), "wei").toString(),
+      value: rawReceipt.value.toString(),
     };
+
+    // for testing only!
+    // const receipt: ActionTypes.SerializedReceipt = {
+    //   chainId: "1337",
+    //   data: "null",
+    //   from: "0x90f8bf6a479f320ead074411a4b0e7944ea8c9c1",
+    //   gasLimit: "5",
+    //   gasPrice: "0",
+    //   hash: "0xTEST",
+    //   to,
+    //   value: transaction.value.toString(),
+    // };
 
     yield put({
       type: ActionTypes.SEND_TRANSACTION_SUCCESS,

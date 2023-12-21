@@ -1,14 +1,33 @@
-import React from 'react';
+import { useCallback, useState } from "react";
+import { WalletState } from "@web3-onboard/core";
 
-import NaiveRouter from './components/NaiveRouter';
-import Navigation from './components/Navigation';
+import NaiveRouter from "./components/NaiveRouter";
+import Navigation from "./components/Navigation";
 
-import './App.css';
+import "./App.css";
 
-function App() {
+interface Props {
+  onboard: any;
+}
+function App({ onboard }: Props) {
+  const [wallet, setWallet] = useState<WalletState>();
+
+  const handleConnect = useCallback(async () => {
+    const wallets = await onboard.connectWallet();
+
+    const [metamaskWallet] = wallets;
+
+    if (
+      metamaskWallet.label === "MetaMask" &&
+      metamaskWallet.accounts[0].address
+    ) {
+      setWallet(metamaskWallet);
+    }
+  }, [onboard]);
+
   return (
     <div>
-      <Navigation />
+      <Navigation {...{ wallet, handleConnect }} />
       <NaiveRouter />
     </div>
   );

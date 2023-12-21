@@ -1,49 +1,24 @@
-import React, { useCallback, useState } from "react";
-import Onboard, { WalletState } from "@web3-onboard/core";
-import injectedModule from "@web3-onboard/injected-wallets";
+import React from "react";
+import { WalletState } from "@web3-onboard/core";
 
 import SendTransaction from "./SendTransaction";
+import { navigate } from "./NaiveRouter";
 
-const injected = injectedModule();
-
-const onboard = Onboard({
-  wallets: [injected],
-  chains: [
-    {
-      id: "1337",
-      token: "ETH",
-      label: "Local Ganache",
-      rpcUrl: "http://localhost:8545",
-    },
-  ],
-});
-
-const Navigation: React.FC = () => {
-  const [wallet, setWallet] = useState<WalletState>();
-
-  const handleConnect = useCallback(async () => {
-    const wallets = await onboard.connectWallet();
-
-    const [metamaskWallet] = wallets;
-
-    if (
-      metamaskWallet.label === "MetaMask" &&
-      metamaskWallet.accounts[0].address
-    ) {
-      setWallet(metamaskWallet);
-    }
-  }, []);
-
+interface Props {
+  wallet: WalletState | undefined;
+  handleConnect: () => Promise<void>;
+}
+const Navigation: React.FC<Props> = ({ wallet, handleConnect }) => {
   return (
     <header className="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-ful text-sm py-4 bg-gray-800">
       <nav className="max-w-[85rem] w-full mx-auto px-4 sm:flex sm:items-center sm:justify-between">
         <div className="flex items-center justify-center sm:justify-between">
-          <a
+          <button
             className="flex-none text-xl font-semibold dark:text-white"
-            href="."
+            onClick={() => navigate("/transactions")}
           >
             Transactions List
-          </a>
+          </button>
         </div>
         <div className="hs-collapse overflow-hidden transition-all duration-300 basis-full grow">
           <div className="flex flex-col mt-4 gap-2 sm:flex-row sm:items-center sm:justify-end sm:mt-0 sm:pl-5">
