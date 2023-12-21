@@ -1,17 +1,28 @@
-import { configureStore } from '@reduxjs/toolkit';
-import createSagaMiddleware from 'redux-saga';
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import createSagaMiddleware from "redux-saga";
 
-import reducer from './reducers';
-
+import transactionReducer, { TransactionState } from "./transaction/reducer";
+import transactionSaga from "./transaction/sagas";
 
 const sagaMiddleware = createSagaMiddleware();
 
-export const store = configureStore({
-  reducer,
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware({
-    serializableCheck: {
-      ignoredActionPaths: ['payload'],
-    },
-  }).concat(sagaMiddleware),
+const middlewares = [sagaMiddleware];
+
+const reducer = combineReducers({
+  transaction: transactionReducer,
 });
 
+const store = configureStore({
+  reducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(middlewares),
+});
+
+sagaMiddleware.run(function* () {
+  yield transactionSaga();
+});
+
+export interface Store {
+  transaction: TransactionState;
+}
+export default store;

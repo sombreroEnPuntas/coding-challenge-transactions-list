@@ -1,27 +1,49 @@
-import React, { useCallback } from 'react';
-import { useDispatch } from 'react-redux'
-import { useForm } from "react-hook-form";
+import React, { useCallback, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux'
 
-import { Actions } from '../types';
+import { CLEAR_TRANSACTION_REQUEST, SEND_TRANSACTION_REQUEST } from '../store/transaction/actions';
+import { getTransactionError, getTransactionStatus } from '../store/transaction/selectors';
 
-const SendTransaction: React.FC = () => {
+interface Props {
+  fromAddress: string
+}
+const SendTransaction: React.FC<Props> = ({ fromAddress }) => {
+  const [recipient, setRecipient] = useState('');
+  const [amount, setAmount] = useState('');
+
+  const error = useSelector(getTransactionError)
+  const status = useSelector(getTransactionStatus)
+
   const dispatch = useDispatch();
-  const { handleSubmit } = useForm();
 
-  const onSubmit = (data: any) => console.log(data);
-
+  const handleRecipientChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    setRecipient(event.target.value);
+  };
+  const handleAmountChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    setAmount(event.target.value);
+  };
   const handleDispatch = useCallback(() => {
     dispatch({
-      type: Actions.SendTransaction,
+      type: SEND_TRANSACTION_REQUEST,
+      payload: { to: recipient, amount },
+    });
+  }, [amount, dispatch, recipient]);
+  const handleClear = useCallback(() => {
+    dispatch({
+      type: CLEAR_TRANSACTION_REQUEST,
     });
   }, [dispatch]);
+
+  let message = <p />
+  if(status === 'PENDING') message = <p className="text-xs italic">Sign Tx with MetaMask...</p>
+  if(error) message = <p className="text-red-500 text-xs italic">Oops, something went sideways!</p>
 
   return (
     <>
       <button data-hs-overlay="#hs-basic-modal" type="button" className="py-3 px-4 inline-flex justify-center items-center gap-2 rounded-md border border-transparent font-semibold bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all text-sm">
         Send
       </button>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleDispatch}>
         <div id="hs-basic-modal" className="hs-overlay hidden w-full h-full fixed top-0 left-0 z-[60] overflow-x-hidden overflow-y-auto bg-black bg-opacity-60">
           <div className="hs-overlay-open:opacity-100 hs-overlay-open:duration-500 opacity-100 transition-all w-full m-3 mx-auto flex flex-col h-full items-center justify-center">
             <div className="bg-white border shadow-sm rounded-xl w-modal">
@@ -39,19 +61,22 @@ const SendTransaction: React.FC = () => {
               <div className="p-4 overflow-y-auto">
                 <p className="mt-1 mb-6 text-gray-800">Send ETH to a wallet address</p>
                 <label htmlFor="input-sender" className="block text-sm font-bold my-2">Sender:</label>
-                <input type="text" id="input-sender" className="opacity-70 pointer-events-none py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full" placeholder="Sender Address (Autocompleted)" disabled />
+                <input type="text" id="input-sender" className="opacity-70 pointer-events-none py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full disabled:pointer-events-none" placeholder={fromAddress} disabled />
                 <label htmlFor="input-recipient" className="block text-sm font-bold my-2">Recipient:</label>
-                <input type="text" id="input-recipient" className="opacity-70 pointer-events-none py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full" placeholder="Recipient Address" disabled />
+                <input disabled={status === 'PENDING'} type="text" id="input-recipient" className="opacity-70 py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full disabled:pointer-events-none" placeholder="Recipient Address" value={recipient} onChange={handleRecipientChange} />
                 <label htmlFor="input-amount" className="block text-sm font-bold my-2">Amount:</label>
-                <input type="number" id="input-amount" className="opacity-70 pointer-events-none py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full" placeholder="Amount" disabled />
+                <input disabled={status === 'PENDING'} type="number" step=".01" id="input-amount" className="opacity-70 py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full disabled:pointer-events-none" placeholder="Amount" value={amount} onChange={handleAmountChange} />
               </div>
               <div className="flex justify-end items-center gap-x-2 py-3 px-4 border-t">
-                <button type="button" className="hs-dropdown-toggle py-3 px-4 inline-flex justify-center items-center gap-2 rounded-md border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm" data-hs-overlay="#hs-basic-modal">
+                <button disabled={status === 'PENDING'} type="button" onClick={handleClear} className="hs-dropdown-toggle py-3 px-4 inline-flex justify-center items-center gap-2 rounded-md border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm disabled:pointer-events-none" data-hs-overlay="#hs-basic-modal">
                   Close
                 </button>
-                <button type="button" onClick={handleDispatch} className="py-3 px-4 inline-flex justify-center items-center gap-2 rounded-md border border-transparent font-semibold bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all text-sm">
+                <button disabled={status === 'PENDING'} type="button" onClick={handleDispatch} className="py-3 px-4 inline-flex justify-center items-center gap-2 rounded-md border border-transparent font-semibold bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all text-sm disabled:pointer-events-none">
                   Send
                 </button>
+              </div>
+              <div className="flex justify-center items-center gap-x-2 py-3 px-4 color-error">
+                {message}
               </div>
             </div>
           </div>

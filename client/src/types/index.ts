@@ -16,12 +16,3 @@ export interface TransactionsData {
 export interface SingleTransactionData {
   getTransaction: Transaction;
 }
-
-export type Action<P> = {
-  type: Actions,
-  payload: P,
-};
-
-export enum Actions {
-  SendTransaction = 'SEND_TRANSACTION',
-};
